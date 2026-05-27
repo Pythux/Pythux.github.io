@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glossaire Équestre</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:      #6b4226;
+      --brown-light:#a0673a;
+      --tan:        #d4a96a;
+      --cream:      #fdf6ec;
+      --green:      #4a7c59;
+      --green-light:#6aa87a;
+      --text:       #2c1a0e;
+      --muted:      #8a7060;
+      --border:     #e0cdb8;
+      --white:      #ffffff;
+      --sidebar-w:  260px;
+    }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--brown);
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: normal;
+      letter-spacing: .03em;
+      flex: 1;
+    }
+    header h1 span {
+      opacity: .65;
+      font-size: .95rem;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: .35rem .7rem;
+      gap: .4rem;
+    }
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--white);
+      font-size: .9rem;
+      width: 180px;
+    }
+    .search-box input::placeholder { color: rgba(255,255,255,.55); }
+    .search-box svg { opacity: .65; flex-shrink: 0; }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 58px);
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      position: sticky;
+      top: 58px;
+      height: calc(100vh - 58px);
+    }
+    .sidebar-title {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      padding: 1rem 1rem .4rem;
+    }
+    nav ul { list-style: none; padding: 0 .5rem .5rem; }
+    nav ul li {
+      margin: 1px 0;
+    }
+    nav ul li button {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .55rem .75rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: .88rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: background .15s, color .15s;
+    }
+    nav ul li button:hover { background: var(--cream); }
+    nav ul li button.active {
+      background: var(--brown);
+      color: var(--white);
+    }
+    nav ul li button .count {
+      margin-left: auto;
+      font-size: .72rem;
+      opacity: .6;
+      background: rgba(0,0,0,.08);
+      padding: .1rem .45rem;
+      border-radius: 10px;
+    }
+    nav ul li button.active .count { background: rgba(255,255,255,.2); opacity: 1; }
+    .cat-icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ── Main content ── */
+    main {
+      flex: 1;
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
+    }
+
+    /* Search results banner */
+    .search-banner {
+      background: var(--tan);
+      color: var(--brown);
+      padding: .6rem 1rem;
+      border-radius: 8px;
+      font-size: .9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Category section */
+    .category-section { margin-bottom: 3rem; }
+    .category-header {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid var(--tan);
+    }
+    .category-header h2 {
+      font-size: 1.35rem;
+      color: var(--brown);
+      font-weight: normal;
+    }
+    .category-header .cat-count {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .subcategory { margin-bottom: 1.5rem; }
+    .subcategory-intro {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: .75rem;
+      font-style: italic;
+    }
+    .subcategory-title {
+      font-size: .95rem;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .subcategory-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--green-light);
+      opacity: .4;
+    }
+
+    /* Term cards grid */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: .75rem;
+    }
+
+    .term-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .9rem 1rem;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .term-card:hover {
+      box-shadow: 0 3px 12px rgba(107,66,38,.1);
+      border-color: var(--tan);
+    }
+    .term-card h3 {
+      font-size: .95rem;
+      color: var(--brown);
+      margin-bottom: .4rem;
+      font-style: italic;
+    }
+    .term-card p {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .term-card ul {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      padding-left: 1.1rem;
+    }
+
+    .cat-illustration {
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      padding: .5rem;
+    }
+
+    /* Search highlight */
+    mark {
+      background: var(--tan);
+      color: var(--brown);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 1rem; }
+
+    /* Responsive */
+    @media (max-width: 680px) {
+      aside {
+        display: none;
+      }
+      main { padding: 1.25rem 1rem; }
+      .search-box input { width: 120px; }
+      header h1 span { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🐴 Glossaire Équestre <span>— Centre équestre</span></h1>
+    <div class="search-box">
+      <svg width="14" height="14" fill="white" viewBox="0 0 20 20">
+        <path d="M12.9 14.32a8 8 0 111.41-1.41l5.35 5.33-1.42
+          1.42-5.33-5.34zM8 14A6 6 0 108 2a6 6 0 000 12z"/>
+      </svg>
+      <input
+        v-model="search"
+        type="search"
+        placeholder="Rechercher un terme…"
+        @input="onSearch"
+      />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="sidebar-title">Catégories</div>
+      <nav>
+        <ul>
+          <li v-for="cat in categories" :key="cat.id">
+            <button
+              :class="{ active: activeCat === cat.id && !search }"
+              @click="selectCat(cat.id)"
+            >
+              <span class="cat-icon">{{ cat.icon }}</span>
+              {{ cat.label }}
+              <span class="count">{{ cat.totalTerms }}</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main>
+      <!-- Search results -->
+      <template v-if="search">
+        <div class="search-banner" v-if="searchResults.length">
+          {{ searchResults.length }} résultat{{ searchResults.length > 1
+            ? 's' : '' }} pour « {{ search }} »
+        </div>
+        <div v-if="!searchResults.length" class="empty-state">
+          <div class="icon">🔍</div>
+          <p>Aucun terme trouvé pour « {{ search }} »</p>
+        </div>
+        <div class="terms-grid" v-else>
+          <div
+            class="term-card"
+            v-for="r in searchResults"
+            :key="r.cat + r.term"
+          >
+            <h3 v-html="highlight(r.term)"></h3>
+            <p v-if="!r.items" v-html="highlight(r.def)"></p>
+            <ul v-else>
+              <li v-for="item in r.items" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </template>
+
+      <!-- Normal browsing -->
+      <template v-else>
+        <div
+          class="category-section"
+          v-for="cat in visibleCategories"
+          :key="cat.id"
+          :id="cat.id"
+        >
+          <div class="category-header">
+            <h2>{{ cat.icon }} {{ cat.label }}</h2>
+            <span class="cat-count">
+              {{ cat.totalTerms }} terme{{ cat.totalTerms > 1 ? 's' : '' }}
+            </span>
+          </div>
+          <img
+            v-if="cat.image"
+            :src="cat.image"
+            :alt="cat.label"
+            class="cat-illustration"
+          />
+
+          <!-- Category with subcategories -->
+          <template v-if="cat.subcategories">
+            <div
+              class="subcategory"
+              v-for="sub in cat.subcategories"
+              :key="sub.label"
+            >
+              <div class="subcategory-title">{{ sub.label }}</div>
+              <p
+                class="subcategory-intro"
+                v-if="sub.intro"
+              >{{ sub.intro }}</p>
+              <div class="terms-grid">
+                <div
+                  class="term-card"
+                  v-for="t in sub.terms"
+                  :key="t.term"
+                >
+                  <h3>{{ t.term }}</h3>
+                  <p v-if="!t.items">{{ t.def }}</p>
+                  <ul v-else>
+                    <li v-for="item in t.items" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Flat category -->
+          <div class="terms-grid" v-else>
+            <div
+              class="term-card"
+              v-for="t in cat.terms"
+              :key="t.term"
+            >
+              <h3>{{ t.term }}</h3>
+              <p v-if="!t.items">{{ t.def }}</p>
+              <ul v-else>
+                <li v-for="item in t.items" :key="item">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+    </main>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed } = Vue
+
+const ALL_CATS = [
+  {
+    id: 'lieux',
+    icon: '🏟️',
+    label: 'Les lieux',
+    terms: [
+      { term: 'Le manège',      def: 'Espace couvert où l\'on monte à cheval.' },
+      { term: 'La carrière',    def: 'Terrain extérieur pour travailler les chevaux.' },
+      { term: 'Le rond de longe', def: 'Petit cercle fermé utilisé pour travailler un cheval à la longe.' },
+      { term: 'Les écuries',    def: 'Bâtiment où vivent les chevaux.' },
+      { term: 'Le box',         def: 'Espace individuel d\'un cheval.' },
+      { term: 'La stabulation', def: 'Espace collectif où plusieurs chevaux vivent ensemble.' },
+      { term: 'Le paddock',     def: 'Petit enclos extérieur pour sortir les chevaux quelques heures.' },
+      { term: 'Le pré',         def: 'Grand terrain d\'herbe où les chevaux vivent ou pâturent.' },
+      { term: 'La sellerie',    def: 'Pièce où l\'on range le matériel d\'équitation.' },
+      { term: 'Le club-house',  def: 'Lieu de détente des cavaliers.' },
+    ],
+  },
+  {
+    id: 'personnes',
+    icon: '👤',
+    label: 'Les personnes',
+    terms: [
+      { term: 'Le cavalier / la cavalière', def: 'Personne qui monte à cheval.' },
+      { term: 'Le moniteur / la monitrice', def: 'Professeur d\'équitation.' },
+      { term: 'Le palefrenier',  def: 'Personne qui s\'occupe des soins quotidiens des chevaux.' },
+      { term: 'Le groom',        def: 'Personne qui prépare et accompagne les chevaux en concours.' },
+      { term: 'Le maréchal-ferrant', def: 'Professionnel qui entretient les sabots et pose les fers.' },
+      { term: 'Le vétérinaire',  def: 'Médecin des chevaux.' },
+      { term: 'L\'ostéopathe équin', def: 'Spécialiste des problèmes musculaires et articulaires du cheval.' },
+    ],
+  },
+  {
+    id: 'parties',
+    icon: '🐎',
+    label: 'Parties du cheval',
+    terms: [
+      { term: 'Les sabots',    def: 'Les "pieds" du cheval.' },
+      { term: 'La crinière',   def: 'Les longs poils du cou.' },
+      { term: 'Le garrot',     def: 'Zone entre l\'encolure et le dos, point de référence pour mesurer la taille.' },
+      { term: 'L\'encolure',   def: 'Le cou du cheval.' },
+      { term: 'La croupe',     def: 'Arrière-train du cheval.' },
+      { term: 'Les fanons',    def: 'Poils autour des sabots chez certaines races.' },
+      { term: 'Les balzanes',  def: 'Marques blanches sur les jambes.' },
+      { term: 'La liste',      def: 'Marque blanche sur la tête.' },
+    ],
+  },
+  {
+    id: 'allures',
+    icon: '💨',
+    label: 'Les allures',
+    terms: [
+      { term: 'Le pas',     def: 'Allure lente à 4 temps.' },
+      { term: 'Le trot',    def: 'Allure à 2 temps avec rebond.' },
+      { term: 'Le galop',   def: 'Allure rapide à 3 temps.' },
+      { term: 'L\'arrêt',   def: 'Quand le cheval est immobile.' },
+      { term: 'Le reculer', def: 'Le cheval marche en arrière.' },
+    ],
+  },
+  {
+    id: 'materiel',
+    icon: '🧰',
+    label: 'Le matériel',
+    subcategories: [
+      {
+        label: 'Pour le cheval',
+        terms: [
+          { term: 'La selle',        def: 'Siège posé sur le dos du cheval.' },
+          { term: 'Le tapis de selle', def: 'Protection placée sous la selle.' },
+          { term: 'Le filet',        def: 'Ensemble placé sur la tête du cheval pour le diriger.' },
+          { term: 'Le mors',         def: 'Pièce dans la bouche du cheval reliée aux rênes.' },
+          { term: 'Les rênes',       def: 'Lanières tenues par le cavalier.' },
+          { term: 'La sangle',       def: 'Bande qui maintient la selle.' },
+          { term: 'Les étriers',     def: 'Supports pour les pieds du cavalier.' },
+          { term: 'Le licol',        def: 'Équipement utilisé pour manipuler le cheval à pied.' },
+          { term: 'La longe',        def: 'Grande corde utilisée pour travailler le cheval du sol.' },
+          { term: 'Les protections', def: 'Guêtres, cloches, protège-boulets servant à protéger les jambes.' },
+          { term: 'La couverture',   def: '"Manteau" du cheval pour le chaud, la pluie ou les insectes.' },
+        ],
+      },
+      {
+        label: 'Pour le cavalier',
+        terms: [
+          { term: 'La bombe',       def: 'Casque d\'équitation.' },
+          { term: 'Les bottes',     def: 'Chaussures hautes d\'équitation.' },
+          { term: 'Les mini-chaps', def: 'Protections de mollets portées avec des boots.' },
+          { term: 'La cravache',    def: 'Petit stick servant à renforcer une aide.' },
+          { term: 'Les éperons',    def: 'Accessoires fixés aux bottes pour affiner les aides.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'guide-materiel',
+    icon: '📖',
+    label: 'Guide du matériel',
+    image: '/Glossaire Équestre/équipement d\'équitation essentiel.webp',
+    subcategories: [
+      {
+        label: '1. Matériel de pansage — L\'hygiène',
+        intro: 'Avant et après avoir monté, le cavalier doit brosser son'
+          + ' cheval. C\'est un moment privilégié pour vérifier l\'état de'
+          + ' santé de l\'animal.',
+        terms: [
+          {
+            term: 'L\'étrille',
+            def: 'En plastique ou caoutchouc, utilisée en mouvements'
+              + ' circulaires sur les parties charnues pour décoller la'
+              + ' poussière et la boue.',
+          },
+          {
+            term: 'Le bouchon (Brosse dure)',
+            def: 'Pour retirer la saleté décollée par l\'étrille.',
+          },
+          {
+            term: 'La brosse douce',
+            def: 'Pour lustrer le poil et nettoyer les zones sensibles'
+              + ' (tête, membres).',
+          },
+          {
+            term: 'Le cure-pied',
+            def: 'L\'outil indispensable pour retirer les cailloux et la'
+              + ' terre coincés sous les sabots.',
+          },
+          {
+            term: 'L\'éponge',
+            def: 'Pour nettoyer délicatement les naseaux et les yeux.',
+          },
+        ],
+      },
+      {
+        label: '2. Matériel de sellerie — Pour le dos',
+        intro: 'L\'équipement qui assure le confort du cheval et du'
+          + ' cavalier.',
+        terms: [
+          {
+            term: 'Le tapis de selle',
+            def: 'Protège le dos du cheval des frottements et absorbe'
+              + ' la sueur.',
+          },
+          {
+            term: 'L\'amortisseur',
+            def: '(Optionnel) Aide à répartir les pressions de la selle.',
+          },
+          {
+            term: 'La selle',
+            def: 'Siège du cavalier, adaptée à la morphologie du cheval'
+              + ' et à la discipline.',
+          },
+          {
+            term: 'La sangle',
+            def: 'Bande qui passe sous le ventre pour maintenir la selle'
+              + ' en place.',
+          },
+        ],
+      },
+      {
+        label: '2. Matériel de sellerie — Pour la tête',
+        terms: [
+          {
+            term: 'Le filet (ou bride)',
+            def: 'Ensemble de lanières en cuir permettant de tenir le'
+              + ' mors.',
+          },
+          {
+            term: 'Le mors',
+            def: 'Pièce en métal ou résine placée dans la bouche pour'
+              + ' diriger le cheval.',
+          },
+          {
+            term: 'Les rênes',
+            def: 'Les lanières que le cavalier tient en main.',
+          },
+        ],
+      },
+      {
+        label: '3. Équipement du cavalier — La sécurité',
+        intro: 'Monter à cheval demande une protection adaptée : la'
+          + ' sécurité est la priorité numéro un.',
+        terms: [
+          {
+            term: 'La bombe (ou casque)',
+            def: 'Obligatoire. Elle protège la tête en cas de chute et'
+              + ' doit répondre aux normes de sécurité en vigueur.',
+          },
+          {
+            term: 'Le pantalon d\'équitation',
+            def: 'Près du corps pour éviter les plis, doté de renforts'
+              + ' (basanes) à l\'intérieur des genoux.',
+          },
+          {
+            term: 'Les bottes ou boots + mini-chaps',
+            def: 'Possèdent un petit talon pour empêcher le pied de'
+              + ' glisser dans l\'étrier.',
+          },
+          {
+            term: 'Le gilet de protection',
+            def: 'Parfois obligatoire (cross, saut d\'obstacles), il'
+              + ' protège la colonne vertébrale et les côtes.',
+          },
+        ],
+      },
+      {
+        label: '4. Matériel d\'écurie et d\'infrastructure',
+        intro: 'Pour l\'entretien quotidien du centre.',
+        terms: [
+          {
+            term: 'Le licol et la longe',
+            def: 'Pour mener le cheval à la main ou l\'attacher pendant'
+              + ' le pansage.',
+          },
+          {
+            term: 'La fourche et la pelle',
+            def: 'Pour nettoyer les boxes.',
+          },
+          {
+            term: 'Les barres d\'obstacles et chandeliers',
+            def: 'Pour le travail à l\'obstacle dans la carrière ou le'
+              + ' manège.',
+          },
+          {
+            term: 'La mangeoire et l\'abreuvoir',
+            def: 'Indispensables dans chaque box pour l\'eau et la'
+              + ' nourriture (granulés, foin).',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'soins',
+    icon: '🧴',
+    label: 'Actions et soins',
+    subcategories: [
+      {
+        label: 'Les actions courantes',
+        terms: [
+          { term: 'Panser',          def: 'Nettoyer et préparer le cheval.' },
+          { term: 'Curer les pieds', def: 'Nettoyer les sabots avec un cure-pied.' },
+          { term: 'Seller',          def: 'Mettre la selle.' },
+          { term: 'Brider',          def: 'Mettre le filet.' },
+          { term: 'Longer',          def: 'Faire travailler le cheval au bout d\'une longe.' },
+          { term: 'Débourrer',       def: 'Habituer un jeune cheval à être monté.' },
+          { term: 'Doucher',         def: 'Rincer le cheval après le travail.' },
+          { term: 'Tondre',          def: 'Couper les poils du cheval.' },
+        ],
+      },
+      {
+        label: 'La gestion des soins et des frais',
+        terms: [
+          {
+            term: 'La Pension (Base)',
+            def: 'Le coût du logement et de la nourriture du cheval.',
+          },
+          {
+            term: 'Les Frais de Maréchalerie',
+            def: 'Coût de l\'entretien des sabots (ferrage ou parage).'
+              + ' En DP, ils sont parfois partagés.',
+          },
+          {
+            term: 'Les Frais Vétérinaires',
+            def: 'Soins courants (vaccins, vermifuges) ou imprévus.',
+          },
+          {
+            term: 'Le Pansage',
+            def: 'L\'action de brosser et nettoyer le cheval avant et'
+              + ' après la séance.',
+          },
+          {
+            term: 'La "Sortie"',
+            def: 'Action d\'aller monter ou de sortir le cheval en main.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'disciplines',
+    icon: '🏆',
+    label: 'Disciplines',
+    terms: [
+      { term: 'Dressage',              def: 'Discipline basée sur la précision et la souplesse.' },
+      { term: 'Saut d\'obstacles (CSO)', def: 'Franchissement d\'obstacles.' },
+      { term: 'Cross',                 def: 'Parcours d\'obstacles naturels en extérieur.' },
+      { term: 'Hunter',                def: 'Discipline mélangeant style et saut.' },
+      { term: 'Voltige',               def: 'Gymnastique sur cheval.' },
+      { term: 'Endurance',             def: 'Courses longues distances.' },
+      { term: 'Pony games',            def: 'Jeux à poney en équipe.' },
+      { term: 'Éthologie',             def: 'Travail basé sur le comportement naturel du cheval.' },
+    ],
+  },
+  {
+    id: 'monte',
+    icon: '🎯',
+    label: 'Termes de monte',
+    terms: [
+      { term: 'Être à main droite / gauche', def: 'Sens dans lequel on tourne.' },
+      { term: 'Changer de main',   def: 'Changer de direction.' },
+      { term: 'Diagonale',         def: 'Trajet traversant la carrière.' },
+      { term: 'Piste',             def: 'Contour du terrain.' },
+      { term: 'Doubler',           def: 'Traverser la carrière en ligne droite.' },
+      { term: 'Assis / enlevé',    def: 'Deux façons de s\'asseoir au trot.' },
+      { term: 'En équilibre',      def: 'Position légèrement debout dans les étriers.' },
+      {
+        term: 'Les aides',
+        def: 'Actions du cavalier pour communiquer avec le cheval.',
+        items: ['Jambes', 'Mains', 'Poids du corps', 'Voix'],
+      },
+    ],
+  },
+  {
+    id: 'niveaux',
+    icon: '🎖️',
+    label: 'Niveaux et examens',
+    terms: [
+      { term: 'Les Galops', def: 'Niveaux officiels d\'équitation en France délivrés par la Fédération Française d\'Équitation.' },
+      { term: 'Galop 1 à 7', def: 'Progression technique du débutant au cavalier confirmé.' },
+    ],
+  },
+  {
+    id: 'robes',
+    icon: '🎨',
+    label: 'Les robes',
+    terms: [
+      { term: 'Bai',      def: 'Corps brun avec crins noirs.' },
+      { term: 'Alezan',   def: 'Robe rousse.' },
+      { term: 'Noir',     def: 'Entièrement noir.' },
+      { term: 'Gris',     def: 'Devient souvent blanc avec l\'âge.' },
+      { term: 'Pie',      def: 'Avec grandes taches blanches.' },
+      { term: 'Isabelle', def: 'Beige doré avec crins noirs.' },
+    ],
+  },
+  {
+    id: 'expressions',
+    icon: '💬',
+    label: 'Expressions',
+    terms: [
+      { term: '« Mettre le cheval sur la main »', def: 'Le cheval accepte correctement le contact avec le mors.' },
+      { term: '« Un cheval froid »',  def: 'Cheval calme, peu réactif.' },
+      { term: '« Un cheval chaud »',  def: 'Cheval énergique et sensible.' },
+      { term: '« Faire une rêne d\'ouverture »', def: 'Écarter une rêne pour guider.' },
+      { term: '« Être en reprise »',  def: 'Participer à un cours collectif.' },
+    ],
+  },
+  {
+    id: 'types',
+    icon: '🐴',
+    label: 'Types de chevaux',
+    terms: [
+      { term: 'Poney',             def: 'Petit équidé.' },
+      { term: 'Double-poney',      def: 'Entre poney et cheval.' },
+      { term: 'Cheval',            def: 'Grand équidé monté par adolescents/adultes.' },
+      { term: 'Hongre',            def: 'Cheval mâle castré.' },
+      { term: 'Jument',            def: 'Femelle.' },
+      { term: 'Étalon',            def: 'Mâle non castré.' },
+      { term: 'Poulain / pouliche', def: 'Jeune cheval.' },
+    ],
+  },
+  {
+    id: 'contrats',
+    icon: '📋',
+    label: 'Contrats',
+    terms: [
+      {
+        term: 'Le Propriétaire',
+        def: 'La personne (ou le centre équestre) qui possède'
+          + ' légalement le cheval.',
+      },
+      {
+        term: 'Le Demi-pensionnaire',
+        def: 'Le cavalier qui loue une partie du temps de monte'
+          + ' du cheval.',
+      },
+      {
+        term: 'Tiers de pension / Quart de pension',
+        def: 'Variantes de la DP où le temps de monte et les frais'
+          + ' sont divisés différemment (ex : 2 jours par semaine'
+          + ' pour un tiers).',
+      },
+      {
+        term: 'Contrat de DP',
+        def: 'Document écrit indispensable qui définit les jours de'
+          + ' monte, les disciplines autorisées, le prix et les'
+          + ' responsabilités en cas d\'accident.',
+      },
+      {
+        term: 'DP "Clé en main"',
+        def: 'Le propriétaire s\'occupe de tout le matériel et des'
+          + ' soins vétérinaires, vous ne payez qu\'une somme fixe'
+          + ' pour monter.',
+      },
+      {
+        term: 'DP "Tous frais partagés"',
+        def: 'Vous payez la moitié de tout (pension, maréchal,'
+          + ' ostéopathe, vaccins). C\'est souvent plus'
+          + ' responsabilisant.',
+      },
+    ],
+  },
+  {
+    id: 'vie-dp',
+    icon: '🌿',
+    label: 'La vie en club',
+    terms: [
+      {
+        term: 'La Carrière',
+        def: 'Espace de travail extérieur sablé.',
+      },
+      {
+        term: 'Le Manège',
+        def: 'Espace de travail couvert, précieux en hiver.',
+      },
+      {
+        term: 'Le Box',
+        def: 'Compartiment individuel où loge le cheval.',
+      },
+      {
+        term: 'Le Paddock',
+        def: 'Petit enclos extérieur où le cheval se détend.',
+      },
+      {
+        term: 'La Sellerie',
+        def: 'Lieu où est entreposé le matériel (selle, filet, brosses).',
+      },
+      {
+        term: 'Le Travail à pied',
+        def: 'Manipuler le cheval sans monter dessus (longe, travail'
+          + ' en liberté, éthologie).',
+      },
+      {
+        term: 'L\'Autonomie',
+        def: 'Se dit d\'un cavalier capable de gérer sa séance sans'
+          + ' l\'encadrement d\'un moniteur.',
+      },
+      {
+        term: 'Le "Sortir en extérieur"',
+        def: 'Partir en balade ou en randonnée hors des installations'
+          + ' du club.',
+      },
+      {
+        term: 'La Mise en selle',
+        def: 'Exercices visant à améliorer la position du cavalier'
+          + ' (souvent sans étriers).',
+      },
+    ],
+  },
+]
+
+function countTerms(cat) {
+  if (cat.subcategories) {
+    return cat.subcategories.reduce((n, s) => n + s.terms.length, 0)
+  }
+  return cat.terms.length
+}
+
+const categories = ALL_CATS.map(c => ({ ...c, totalTerms: countTerms(c) }))
+
+function flatTerms(cat) {
+  if (cat.subcategories) {
+    return cat.subcategories.flatMap(s =>
+      s.terms.map(t => ({ ...t, cat: cat.id }))
+    )
+  }
+  return cat.terms.map(t => ({ ...t, cat: cat.id }))
+}
+
+createApp({
+  setup() {
+    const search   = ref('')
+    const activeCat = ref('lieux')
+
+    const visibleCategories = computed(() => {
+      if (!activeCat.value) return categories
+      return categories.filter(c => c.id === activeCat.value)
+    })
+
+    const searchResults = computed(() => {
+      const q = search.value.toLowerCase().trim()
+      if (!q) return []
+      return categories.flatMap(cat =>
+        flatTerms(cat).filter(t =>
+          t.term.toLowerCase().includes(q) ||
+          (t.def  && t.def.toLowerCase().includes(q))
+        )
+      )
+    })
+
+    function selectCat(id) {
+      search.value = ''
+      activeCat.value = id
+      const el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    function onSearch() {
+      if (search.value) activeCat.value = ''
+    }
+
+    function highlight(text) {
+      if (!search.value) return text
+      const q = search.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      return text.replace(new RegExp(`(${q})`, 'gi'), '<mark>$1</mark>')
+    }
+
+    return {
+      search, activeCat,
+      categories, visibleCategories, searchResults,
+      selectCat, onSearch, highlight,
+    }
+  },
+}).mount('#app')
+</script>
+</body>
+</html>
