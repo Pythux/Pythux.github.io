@@ -1,5 +1,3 @@
 # Pythux.github.io
 
-    python app.py
-
-Hi
+site web sur github: https://pythux.github.io/
